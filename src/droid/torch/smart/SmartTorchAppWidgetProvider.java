@@ -1,25 +1,31 @@
 package droid.torch.smart;
 
-import java.util.Calendar;
-
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 {
     private static final String TAG = SmartTorchAppWidgetProvider.class.getSimpleName();
-    private boolean isTorchOn = false;
+    private static final String TORCH_ON_OFF_ACTION = "com.smarttorch.intent.action.TORCH_ON_OFF_ACTION";
+
+    @Override
+    public void onReceive(Context context, Intent intent)
+    {
+	super.onReceive(context, intent);
+	if (intent.getAction().equals(TORCH_ON_OFF_ACTION))
+	{
+	    updateTorchStatus(context);
+	}
+	Log.d(TAG, "onReceive called :: " + intent.getAction());
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds)
     {
@@ -28,79 +34,62 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 	for (int i = 0; i < numberOfActiveWidgets; i++)
 	{
 	    super.onUpdate(context, appWidgetManager, appWidgetIds);
-	    
+
 	    int appWidgetId = appWidgetIds[i];
-	    Log.d(TAG, "appWidgetId "+appWidgetId+" appWidgetIds.length : "+appWidgetIds.length);
+	    Log.d(TAG, "appWidgetId " + appWidgetId + " appWidgetIds.length : " + appWidgetIds.length);
+
 	    // Register an onClickListener
-	    Intent intent = new Intent(context, SmartTorchAppWidgetProvider.class);
-
-	    intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-//	    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetId);
-//
-	    PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-	    
 	    RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.torch_layout);
-	    
-	    changeTorchStatusLayout(context,appWidgetId,remoteViews);
-	    remoteViews.setOnClickPendingIntent(R.id.torch_image, pendingIntent);
+	    if(getTorchActiveStatus(context)){
+		remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on);
+	    }
+	    remoteViews.setOnClickPendingIntent(R.id.torch_image, createPendingIntent(context));
 	    appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
-
-	    //
-	    // // Create a PendingIntent to send a broadcast.
-	    // Intent intent = new Intent(context,
-	    // SmartTorchAppWidgetProvider.class);
-	    // intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-	    // intent.putExtra(appWidgetManager.EXTRA_APPWIDGET_ID,
-	    // appWidgetId);
-	    // PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
-	    // 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-	    //
-	    // // Get the layout for the App Widget and attach an on-click
-	    // listener
-	    // // to the button
-	    // RemoteViews views = new RemoteViews(context.getPackageName(),
-	    // R.layout.torch_layout);
-	    // Log.d(TAG, "before setOnClickPendingIntent");
-	    // views.setOnClickPendingIntent(R.id.torch_image, pendingIntent);
-	    // Log.d(TAG, "after setOnClickPendingIntent");
-	    //
-	    // // Tell the AppWidgetManager to perform an update on the current
-	    // app
-	    // // widget
-	    // appWidgetManager.updateAppWidget(appWidgetId, views);
-	    //
-	    // // Update The clock label using a shared method
-	    // updateAppWidget(context, appWidgetManager, appWidgetId);
 	}
     }
-    
-    private void changeTorchStatusLayout(Context context,int appWidgetId,RemoteViews remoteViews)
+
+    private void updateTorchStatus(Context context)
     {
-	
-	SharedPreferences  sharedPreferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
-	isTorchOn = sharedPreferences.getBoolean("isTorchOn", false);
-	Log.d(TAG, "isTorchOn11 :: "+isTorchOn);
-	//RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.torch_layout);
-	if(isTorchOn)
+
+	RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.torch_layout);
+	if (getTorchActiveStatus(context))
 	{
-	    
-	    remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_off); 
-	    Log.d(TAG, "isTorchOn11 :: "+isTorchOn+" bulb_off");
+	    remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_off);
 	}
 	else
 	{
-	    remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on); 
-	    Log.d(TAG, "isTorchOn11 :: "+isTorchOn+" bulb_on");
+	    remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on);
 	}
-	//AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, remoteViews);
-	isTorchOn = !isTorchOn;
-	SharedPreferences.Editor editor = sharedPreferences.edit();
-	editor.putBoolean("isTorchOn", isTorchOn);
-	editor.commit();
-	
-	Log.d(TAG, "isTorchOn22 :: "+isTorchOn);
-	
+	setTorchActiveStatus(context);
+	remoteViews.setOnClickPendingIntent(R.id.torch_image, createPendingIntent(context));
+	AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+	ComponentName componentName = new ComponentName(context, SmartTorchAppWidgetProvider.class);
+	appWidgetManager.updateAppWidget(componentName, remoteViews);
+
     }
+
+    private boolean getTorchActiveStatus(Context context)
+    {
+	SharedPreferences sharedPreferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+	return sharedPreferences.getBoolean("isTorchOn", false);
+    }
+
+    private void setTorchActiveStatus(Context context)
+    {
+	SharedPreferences sharedPreferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
+	SharedPreferences.Editor editor = sharedPreferences.edit();
+	editor.putBoolean("isTorchOn", !sharedPreferences.getBoolean("isTorchOn", false));
+	editor.commit();
+    }
+
+    public PendingIntent createPendingIntent(Context context)
+    {
+	Intent intent = new Intent(context, SmartTorchAppWidgetProvider.class);
+	intent.setAction(TORCH_ON_OFF_ACTION);
+	return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+    }
+    
     
     @Override
     public void onEnabled(Context context)
@@ -114,19 +103,9 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
     public void onDisabled(Context context)
     {
 	super.onDisabled(context);
+	//Delete the shared preferences so that it could not take the previous saved value.
+	context.getSharedPreferences(TAG, 0).edit().clear().commit(); 
 	Log.d(TAG, "Widget Provider disabled.");
-    }
-
-    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId)
-    {
-	Log.d(TAG, "inside updateAppWidget.");
-	RemoteViews updateViews = new RemoteViews(context.getPackageName(), appWidgetId);
-	Drawable myDrawable = context.getResources().getDrawable(R.drawable.ic_launcher);
-	Bitmap bulb_bitmap = ((BitmapDrawable) myDrawable).getBitmap();
-
-	updateViews.setImageViewBitmap(R.id.torch_image, bulb_bitmap);
-	appWidgetManager.updateAppWidget(appWidgetId, updateViews);
-	Log.d(TAG, "end of  updateAppWidget.");
     }
 
 }
