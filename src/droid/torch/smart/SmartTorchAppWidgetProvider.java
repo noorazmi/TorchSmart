@@ -43,7 +43,7 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 	    if(getTorchActiveStatus(context)){
 		remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on);
 	    }
-	    remoteViews.setOnClickPendingIntent(R.id.torch_image, createPendingIntent(context));
+	    remoteViews.setOnClickPendingIntent(R.id.parent_layout, createPendingIntent(context));
 	    appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
 	}
     }
@@ -61,7 +61,7 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 	    remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on);
 	}
 	setTorchActiveStatus(context);
-	remoteViews.setOnClickPendingIntent(R.id.torch_image, createPendingIntent(context));
+	remoteViews.setOnClickPendingIntent(R.id.parent_layout, createPendingIntent(context));
 	AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 	ComponentName componentName = new ComponentName(context, SmartTorchAppWidgetProvider.class);
 	appWidgetManager.updateAppWidget(componentName, remoteViews);
