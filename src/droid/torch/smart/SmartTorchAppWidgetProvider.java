@@ -1,5 +1,6 @@
 package droid.torch.smart;
 
+
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -7,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -14,7 +16,7 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 {
     private static final String TAG = SmartTorchAppWidgetProvider.class.getSimpleName();
     private static final String TORCH_ON_OFF_ACTION = "com.smarttorch.intent.action.TORCH_ON_OFF_ACTION";
-
+    private static final String URI_SCHEME = "torch_wiget";
     @Override
     public void onReceive(Context context, Intent intent)
     {
@@ -44,6 +46,16 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 		remoteViews.setImageViewResource(R.id.torch_image, R.drawable.bulb_on);
 	    }
 	    remoteViews.setOnClickPendingIntent(R.id.parent_layout, createPendingIntent(context));
+	    
+	    
+	    Intent configIntent = new Intent(context, ConfigurationActivity.class);
+	    configIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+	    
+	    //Make this appwidget unique
+	    configIntent.setData(Uri.withAppendedPath(Uri.parse(SmartTorchAppWidgetProvider.URI_SCHEME + "://widget/id/"), String.valueOf(appWidgetId)));
+	    PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, configIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+	    remoteViews.setOnClickPendingIntent(R.id.setting, pendingIntent);
+	    
 	    appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
 	}
     }

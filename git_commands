@@ -1,0 +1,15 @@
+(1)Manually deleted file reference removal for example for this kind of status:
+	# On branch master
+	# Changed but not updated:
+	#   (use "git add/rm <file>..." to update what will be committed)
+	#   (use "git checkout -- <file>..." to discard changes in working directory)
+	#
+	#   deleted:    old-file.txt
+	#   deleted:    another-old-file.txt
+	#   deleted:    unneeded.c
+	
+	Then execute the following command:
+	git add -u
+	git commit -m "Delete many old files"
+
+	
