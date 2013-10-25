@@ -116,9 +116,7 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 
     private void startFlash()
     {
-	Log.d(TAG, " startFlash11");
 	camera = Camera.open();
-	Log.d(TAG, " startFlash22");
 	Parameters parameters = camera.getParameters();
 	parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
 	camera.setParameters(parameters);
@@ -128,9 +126,6 @@ public class SmartTorchAppWidgetProvider extends AppWidgetProvider
 
     private void stopFlash()
     {
-	Log.d(TAG, " stopFlash11");
-	//Camera camera = Camera.open();
-	Log.d(TAG, " stopFlash22");
 	Parameters parameters = camera.getParameters();
 	parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
 	camera.setParameters(parameters);
